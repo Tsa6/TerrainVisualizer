@@ -1,0 +1,268 @@
+{
+	"approved" : true,
+	"description" : "A music visualizer, on a background of a procedurally generated mountain range.  Features customizability, a day night cycle, weather cycles, and more.  Uncustomizable version currently published at http://tsa6.herokuapp.com/pages/visualizer/.  Full list of options:\n\n--Visualizer--\n   - Number of Visualizer Bars\n   - Dynamically Color Visualizer\n   - Visualizer Color\n   - Visualizer Brightness\n   - Visualizer Minimum Height\n   - Visualizer Maximum Height\n   - Visualizer Smoothing\n   \n--Rain--\n   - Rain Frequency\n   - Rain Duration\n   - Rain Amount\n   \n--Terrain--\n   - Number of Mountains\n   - Mountain Resolution\n   \n--Sky--\n   - Sky Resolution\n   - Upper Night Sky Color\n   - Lower Night Sky Color\n   - Upper Sunset Sky Color\n   - Lower Sunset Sky Color\n   - Upper Day Sky Color\n   - Lower Day Sky Color\n   \n--Other--\n   - Time Lock\n   - Time Scale\n   - Scheme Color\n   - Audio Recording",
+	"file" : "index.html",
+	"general" : 
+	{
+		"properties" : 
+		{
+            "menu": 
+            {
+                "text":"Menu",
+                "type":"combo",
+                "value":0,
+                "order":1,
+                "options":
+                [
+                    {
+                        "value": 0,
+                        "label": "Select Menu"
+                    },
+                    {
+                        "value": 1,
+                        "label": "Visualizer"
+                    },
+                    {
+                        "value": 2,
+                        "label": "Rain"
+                    },
+                    {
+                        "value": 3,
+                        "label": "Terrain"
+                    },
+                    {
+                        "value": 4,
+                        "label": "Sky"
+                    },
+                    {
+                        "value": 5,
+                        "label": "Misc"
+                    }
+                ]
+            },
+			"audioBarCount" : 
+			{
+				"condition" : "menu.value === 1",
+				"max" : 64,
+				"min" : 1,
+				"order" : 100,
+				"text" : "Number of Visualizer Bars",
+				"type" : "slider",
+				"value" : 33
+			},
+			"audioBarDynamic" : 
+			{
+				"condition" : "menu.value === 1",
+				"order" : 101,
+				"text" : "Dynamically Color Visualizer",
+				"type" : "bool",
+				"value" : true
+			},
+			"audioBarBrightness" : 
+			{
+				"condition" : "audioBarDynamic.value && menu.value === 1",
+				"max" : 90,
+				"min" : -90,
+				"order" : 102,
+				"text" : "Visualizer Brightness",
+				"type" : "slider",
+				"value" : 20
+			},
+			"audioBarColor" : 
+			{
+				"condition" : "!audioBarDynamic.value && menu.value === 1",
+				"order" : 103,
+				"text" : "Visualizer Color",
+				"type" : "color",
+				"value" : "0 .8 0"
+			},
+			"audioBarTop" : 
+			{
+				"condition" : "menu.value === 1",
+				"order" : 104,
+				"text" : "Visualizer Max Height",
+				"type" : "slider",
+				"value" : "87.5",
+                "min": 0,
+                "max": 100
+			},
+			"audioBarBottom" : 
+			{
+				"condition" : "menu.value === 1",
+				"order" : 105,
+				"text" : "Visualizer Min Height",
+				"type" : "slider",
+				"value" : "40",
+                "min": 0,
+                "max": 100
+			},
+			"audioSmooth" : 
+			{
+				"condition" : "menu.value === 1",
+				"order" : 106,
+				"text" : "Visualizer Smoothing",
+				"type" : "slider",
+				"value" : "40",
+                "min": 0,
+                "max": 99
+			},
+			"rainFreq" : 
+			{
+				"condition" : "menu.value === 2",
+				"max" : 100,
+				"min" : 0,
+				"order" : 200,
+				"text" : "Rain Frequency",
+				"type" : "slider",
+				"value" : 20
+			},
+			"rainDuration" : 
+			{
+				"condition" : "menu.value === 2",
+				"max" : 3600,
+				"min" : 1,
+				"order" : 201,
+				"text" : "Rain Duration (Seconds)",
+				"type" : "slider",
+				"value" : 120
+			},
+			"rainAmt" : 
+			{
+				"condition" : "menu.value === 2",
+				"max" : 100,
+				"min" : 1,
+				"order" : 202,
+				"text" : "Rain Amount",
+				"type" : "slider",
+				"value" : 10
+			},
+			"mountainCount" : 
+			{
+				"condition" : "menu.value === 3",
+				"max" : 50,
+				"min" : 0,
+				"order" : 300,
+				"text" : "Number of Mountains",
+				"type" : "slider",
+				"value" : 20
+			},
+			"mountainResolution" : 
+			{
+				"condition" : "menu.value === 3",
+				"max" : 100,
+				"min" : 1,
+				"order" : 301,
+				"text" : "Mountain Resolution (%)",
+				"type" : "slider",
+				"value" : 100
+			},
+			"skyResolution" : 
+			{
+				"condition" : "menu.value === 4",
+				"max" : 100,
+				"min" : 1,
+				"order" : 400,
+				"text" : "Sky Resolution",
+				"type" : "slider",
+				"value" : 25
+			},
+			"topNight" : 
+			{
+				"condition" : "menu.value === 4",
+				"order" : 401,
+				"text" : "Upper Night Sky Color",
+				"type" : "color",
+				"value" : "#000341"
+			},
+			"bottomNight" : 
+			{
+				"condition" : "menu.value === 4",
+				"order" : 402,
+				"text" : "Lower Night Sky Color",
+				"type" : "color",
+				"value" : "#360023"
+			},
+			"topSun" : 
+			{
+				"condition" : "menu.value === 4",
+				"order" : 403,
+				"text" : "Upper Sunset Sky Color",
+				"type" : "color",
+				"value" : "#8c0291"
+			},
+			"bottomSun" : 
+			{
+				"condition" : "menu.value === 4",
+				"order" : 404,
+				"text" : "Lower Sunset Sky Color",
+				"type" : "color",
+				"value" : "#ffaa37"
+			},
+			"topDay" : 
+			{
+				"condition" : "menu.value === 4",
+				"order" : 405,
+				"text" : "Upper Day Sky Color",
+				"type" : "color",
+				"value" : "#92c1e3"
+			},
+			"bottomDay" : 
+			{
+				"condition" : "menu.value === 4",
+				"order" : 406,
+				"text" : "Lower Day Sky Color",
+				"type" : "color",
+				"value" : "#f4faff"
+			},
+            "realtime": {
+                "type": "bool",
+                "value": false,
+                "text": "Realtime Day/Night Cycle",
+                "order": 407,
+                "condition": "false && menu.value === 5"
+            },
+            "timeLock": {
+                "text": "Time Lock",
+                "type":"bool",
+                "value": false,
+                "order":500,
+                "condition":"menu.value === 5"
+            },
+            "timeLockPos": {
+                "text": "Set Time",
+                "type": "slider",
+                "value": 0,
+                "order": 501,
+                "min":0,
+                "max":100,
+                "condition": "menu.value === 5 && timeLock.value"
+            },
+			"timeScale" : 
+			{
+				"condition" : "menu.value === 5 && !realtime.value && !timeLock.value",
+				"max" : 500,
+				"min" : 1,
+				"order" : 502,
+				"text" : "Time Scale",
+				"type" : "slider",
+				"value" : 100
+			},
+			"schemecolor" : 
+			{
+				"condition" : "menu.value === 5",
+				"order" : 503,
+				"text" : "ui_browse_properties_scheme_color",
+				"type" : "color",
+				"value" : "0 0 0"
+			}
+		},
+		"supportsaudioprocessing" : true
+	},
+	"monetization" : true,
+	"preview" : "preview.jpg",
+	"tags" : [ "Music" ],
+	"title" : "Landscape Visualizer",
+	"type" : "web",
+	"visibility" : "public",
+	"workshopid" : 882675343
+}

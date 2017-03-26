@@ -40,6 +40,10 @@ Direct inqueries to tsa6games@gmail.com
             var MOUNTAIN_SLOPE_RANDOMNESS;
             var TIME_SCALE;
             var TIME_REAL;
+            var TIME_REAL_SUNRISE_H;
+            var TIME_REAL_SUNRISE_M;
+            var TIME_REAL_SUNSET_H;
+            var TIME_REAL_SUNSET_M;
             var TIME_LOCK;
             var TIME_LOCK_POS;
             var RAIN_DURATION;
@@ -97,8 +101,11 @@ Direct inqueries to tsa6games@gmail.com
                 MOUNTAIN_SLOPE_MIN = .1;
                 MOUNTAIN_SLOPE_RANDOMNESS = .15;
                 TIME_SCALE = 1; //In percent per second
-                TIME_REAL = false; //Enable realtime
-                TIME_LOCK = false;
+                TIME_MODE = 0; //0 = Normal, 1 = Real, 2 = Locked
+                TIME_REAL_SUNRISE_H = 6; //Hour of sunrise in 24h time 0 - 23
+                TIME_REAL_SUNRISE_M = .63; //Minute of sunrise between 0 and 1
+                TIME_REAL_SUNSET_H = 17;
+                TIME_REAL_SUNSET_M = .03;
                 TIME_LOCK_POS = 0;//0 - 0.5
                 RAIN_DURATION = 120;//In seconds
                 RAIN_FREQ = .2; //Fraction of time that it is raining.
@@ -262,7 +269,24 @@ Direct inqueries to tsa6games@gmail.com
                 
                 var date = new Date();
                 var nowEpoch = date.getTime();
-                var currentTime = TIME_LOCK?TIME_LOCK_POS:(TIME_REAL?(date.getHours() * 60 + date.getMinutes())/3600:(nowEpoch/100000*TIME_SCALE)%1);
+                var currentTime; // 0 - 1 where 0 = midnight, .25 = sunrise, .5 = day, .75 = sunset, and 1 is back to midnight
+                switch(TIME_MODE) {
+                    case 0:
+                        currentTime = (nowEpoch/100000*TIME_SCALE)%1;
+                        break;
+                    case 1:
+                        var sunrise = TIME_REAL_SUNRISE_H + TIME_REAL_SUNRISE_M;
+                        var sunset = TIME_REAL_SUNSET_H + TIME_REAL_SUNSET_M;
+                        var real = date.getHours() + date.getMinutes()/60;
+                        if(real < sunset && real > sunrise) {
+                            currentTime = map(real,sunrise,sunset,.25,.75);
+                        }else{
+                            currentTime = (real / (24 - sunset + sunrise) / 2 + .75) % 1
+                        }
+                        break;
+                    case 2:
+                        currentTime = TIME_LOCK_POS;
+                }
                 
                 //Draw Background
                 var startTime = new Date().getTime();
@@ -500,12 +524,32 @@ Direct inqueries to tsa6games@gmail.com
                         RAIN_AMT = props.rainAmt.value/100;
                     }
 
-                    if(props.realtime) {
-                        TIME_REAL = props.realtime.value;
+                    if(props.timeMode) {
+                        TIME_MODE = props.timeMode.value;
                     }
 
                     if(props.timeScale) {
                         TIME_SCALE = props.timeScale.value/100;
+                    }
+                    
+                    if(props.timeRealSunriseH) {
+                        TIME_REAL_SUNRISE_H = props.timeRealSunriseH.value;
+                    }
+                    
+                    if(props.timeRealSunriseM) {
+                        TIME_REAL_SUNRISE_M = props.timeRealSunriseM.value/60;
+                    }
+                    
+                    if(props.timeRealSunsetH) {
+                        TIME_REAL_SUNSET_H = props.timeRealSunsetH.value;
+                    }
+                    
+                    if(props.timeRealSunsetM) {
+                        TIME_REAL_SUNSET_M = props.timeRealSunsetM.value/60;
+                    }
+
+                    if(props.timeLockPos) {
+                        TIME_LOCK_POS = map(props.timeLockPos.value, 0, 100, 0, 0.5);
                     }
 
                     if(props.mountainResolution) {
@@ -544,14 +588,6 @@ Direct inqueries to tsa6games@gmail.com
 
                     if(props.bottomDay) {
                         bottomDay = color("rgb(" + props.bottomDay.value.split(" ").map(function(a){return a * 255}) + ")");
-                    }
-
-                    if(props.timeLock) {
-                        TIME_LOCK = props.timeLock.value;
-                    }
-
-                    if(props.timeLockPos) {
-                        TIME_LOCK_POS = map(props.timeLockPos.value, 0, 100, 0, 0.5);
                     }
 
                     //Recall setup, if necessary

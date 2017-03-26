@@ -36,6 +36,10 @@
                     },
                     {
                         "value": 5,
+                        "label": "Time"
+                    },
+                    {
+                        "value": 6,
                         "label": "Misc"
                     }
                 ]
@@ -214,43 +218,90 @@
 				"type" : "color",
 				"value" : "#f4faff"
 			},
-            "realtime": {
-                "type": "bool",
-                "value": false,
-                "text": "Realtime Day/Night Cycle",
-                "order": 407,
-                "condition": "false && menu.value === 5"
-            },
-            "timeLock": {
-                "text": "Time Lock",
-                "type":"bool",
-                "value": false,
-                "order":500,
-                "condition":"menu.value === 5"
-            },
-            "timeLockPos": {
-                "text": "Set Time",
-                "type": "slider",
+            "timeMode": {
+                "type": "combo",
                 "value": 0,
-                "order": 501,
-                "min":0,
-                "max":100,
-                "condition": "menu.value === 5 && timeLock.value"
+                "text": "Time Mode",
+                "order": 500,
+                "condition": "menu.value === 5",
+                "options": [
+                    {
+                        "value":0,
+                        "label":"Normal"
+                    },
+                    {
+                        "value":1,
+                        "label":"Real Time"
+                    },
+                    {
+                        "value":2,
+                        "label":"Locked"
+                    }
+                ]
             },
 			"timeScale" : 
 			{
-				"condition" : "menu.value === 5 && !realtime.value && !timeLock.value",
+				"condition" : "menu.value === 5 && timeMode.value === 0",
 				"max" : 500,
 				"min" : 1,
-				"order" : 502,
+				"order" : 501,
 				"text" : "Time Scale",
 				"type" : "slider",
 				"value" : 100
 			},
+			"timeRealSunriseH" : 
+			{
+				"condition" : "menu.value === 5 && timeMode.value === 1",
+				"max" : 23,
+				"min" : 0,
+				"order" : 501,
+				"text" : "Sunrise Hour (0 - 23)",
+				"type" : "slider",
+				"value" : 6
+			},
+			"timeRealSunriseM" : 
+			{
+				"condition" : "menu.value === 5 && timeMode.value === 1",
+				"min" : 0,
+				"max" : 59,
+				"order" : 502,
+				"text" : "Sunrise Minute",
+				"type" : "slider",
+				"value" : 38
+			},
+			"timeRealSunsetH" : 
+			{
+				"condition" : "menu.value === 5 && timeMode.value === 1",
+				"max" : 23,
+				"min" : 0,
+				"order" : 503,
+				"text" : "Sunset Hour (0 - 23)",
+				"type" : "slider",
+				"value" : 19
+			},
+			"timeRealSunsetM" : 
+			{
+				"condition" : "menu.value === 5 && timeMode.value === 1",
+				"min" : 0,
+				"max" : 59,
+				"order" : 504,
+				"text" : "Sunrise Minute",
+				"type" : "slider",
+				"value" : 2
+			},
+            "timeLockPos": {
+                "text": "Set Time",
+                "type": "slider",
+                "value": 0,
+                "order": 505,
+                "min":0,
+                "max":100,
+                "condition": "menu.value === 5 && timeMode.value === 2"
+            },
 			"schemecolor" : 
 			{
-				"condition" : "menu.value === 5",
-				"order" : 503,
+				"condition" : "menu.value === 6",
+				"order" : 603,
 				"text" : "ui_browse_properties_scheme_color",
 				"type" : "color",
 				"value" : "0 0 0"

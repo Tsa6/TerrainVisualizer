@@ -91,7 +91,6 @@ Direct inqueries to tsa6games@gmail.com
             //   colors
             
             function setup() {
-                createCanvas(windowWidth, windowHeight)
                 
                 MOUNTAIN_COUNT = 10;
                 MOUNTAIN_RESOLUTION_MODIFIER = 1;
@@ -129,6 +128,8 @@ Direct inqueries to tsa6games@gmail.com
                 bottomNight = color('#360023');
                 bottomSun = color('#ffaa37');
                 bottomDay = color('#f4faff');
+                
+                createCanvas(windowWidth, windowHeight)
                 
                 //Register audio listener
                 window.wallpaperRegisterAudioListener(function(data){

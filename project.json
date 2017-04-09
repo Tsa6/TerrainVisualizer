@@ -307,10 +307,17 @@
                 "max":100,
                 "condition": "menu.value === 5"
             },
+            "skyTweakTool": {
+                "text": "Sky Tweak Tool",
+                "type": "bool",
+                "value": false,
+                "order": 600,
+                "condition": "menu.value === 6"
+            },
 			"schemecolor" : 
 			{
 				"condition" : "menu.value === 6",
-				"order" : 603,
+				"order" : 601,
 				"text" : "ui_browse_properties_scheme_color",
 				"type" : "color",
 				"value" : "0 0 0"

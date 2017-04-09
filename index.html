@@ -5,9 +5,10 @@ All rights reserved.
 Direct inqueries to tsa6games@gmail.com
 -->
 <html>
-    <head>
-        <style>
-            body {
+
+<head>
+    <style>
+        body {
                 overflow: hidden;
             }
             
@@ -16,14 +17,15 @@ Direct inqueries to tsa6games@gmail.com
                 left: 0;
                 top: 0;
             }
-        </style>
-    </head>
-    <body>
-        <!--Comment this out when testing using WPE, leave it in for browser testing
+    </style>
+</head>
+
+<body>
+    <!--Comment this out when testing using WPE, leave it in for browser testing
         <script src="https://rawgit.com/ClassicOldSong/WPE-Audio-Simulator/master/dist/wpesmu.min.js"></script>-->
-        <script src="p5.min.js"></script>
-        <script>  
-            //Register property listener
+    <script src="p5.min.js"></script>
+    <script>
+        //Register property listener
             //This needs to be at the top otherwise we miss the initial properties.
             window.wallpaperPropertyListener = {
                 applyUserProperties: applyProperties
@@ -51,6 +53,7 @@ Direct inqueries to tsa6games@gmail.com
             var RAIN_AMT;
             var SKY_RESOLUTION;
             var SKY_MAP_MOD;
+            var SKY_TWEAK_TOOL;
             var AUDIO_SMOOTH;
             var AUDIO_BAR_COUNT;
             var AUDIO_BAR_BRIGHTNESS;
@@ -76,7 +79,7 @@ Direct inqueries to tsa6games@gmail.com
             var audioData;
             var audioVolume;
             var audioDataPrevious;
-            var timeLockChanged;
+            var needRedraw;
             
             //Debug Timers
             var timeBackground = 0;
@@ -117,6 +120,7 @@ Direct inqueries to tsa6games@gmail.com
                 RAIN_DARKNESS=.6
                 SKY_RESOLUTION=4; //Lower numbers = Higher Resolution (1 - 100)
                 SKY_MAP_MOD = 50; //Number between 0 - 100, controls day/night dur.
+                SKY_TWEAK_TOOL = false;
                 AUDIO_VOLUME_SMOOTH=.99;//Larger numbers have a greater smooth (0 - 1)
                 AUDIO_SMOOTH=.4;//Larger numbers have a greater smooth (0 - 1)
                 AUDIO_BAR_COUNT = 33; //Between 2 and 128
@@ -275,180 +279,191 @@ Direct inqueries to tsa6games@gmail.com
             }
             
             function draw() {
-                
-                var audioDataCache = audioData?audioData.slice(0, audioData.length - 1):null;
-                if(TIME_MODE === 2 && !timeLockChanged && audioDataPrevious === audioDataCache && raindrops.length === 0) {
-                    return; //Special case shortcut:  If time is locked at the same spot, it isn't raining, and the audio visualizer hasn't changed, then there's no need to redraw
+                if(SKY_TWEAK_TOOL) {
+                    if(needRedraw) {
+                        needRedraw = false;
+                        for(var x = 0; x < width; x++) {
+                            for(var y = 0; y < height; y++) {
+                                stroke(getColorLin(x/width/2,y/height));
+                                point(x, y);
+                            }
+                        }
+                    }
                 }else{
-                    audioDataPrevious = audioDataCache;
-                    timeLockChanged = false;
-                }
-                
-                var date = new Date();
-                var nowEpoch = date.getTime();
-                var currentTime; // 0 - 1 where 0 = midnight, .25 = sunrise, .5 = day, .75 = sunset, and 1 is back to midnight
-                switch(TIME_MODE) {
-                    case 0:
-                        currentTime = (nowEpoch/100000*TIME_SCALE)%1;
-                        break;
-                    case 1:
-                        var sunrise = TIME_REAL_SUNRISE_H + TIME_REAL_SUNRISE_M;
-                        var sunset = TIME_REAL_SUNSET_H + TIME_REAL_SUNSET_M;
-                        var real = date.getHours() + date.getMinutes()/60;
-                        if(real < sunset && real > sunrise) {
-                            currentTime = map(real,sunrise,sunset,.25,.75);
-                        }else{
-                            currentTime = (real / (24 - sunset + sunrise) / 2 + .75) % 1
-                        }
-                        break;
-                    case 2:
-                        currentTime = TIME_LOCK_POS;
-                }
-                
-                //Draw Background
-                var startTime = new Date().getTime();
-                for(var a = sunMaxA; a > 0; a-=SKY_RESOLUTION) {
-                    noStroke();
-                    fill(getColorRad(currentTime,a));
-                    ellipse(width/2,sunY,2*a*sunR1,2*a)
-                }
-                var now = new Date().getTime();
-                timeBackground = timeBackground * (1 - DEBUG_AVG_FACTOR) + (now - startTime) * DEBUG_AVG_FACTOR;
-                
-                //Draw Audio Visualization
-                startTime = new Date().getTime();
-                if(audioDataCache) {
-                    if(!AUDIO_BAR_DYNAMIC) {
-                        fill(color(AUDIO_BAR_COLOR));
-                    }
-                    noStroke();
-                    var spacing = width / (audioDataCache.length + 1);
-                    for(var i = 0; i < audioDataCache.length; i++) {
-                        if(AUDIO_BAR_DYNAMIC) {
-                            var baseColor = getColorRad(currentTime, calcSkyA(spacing * (i - 1), height/2));
-                            fill(
-                                "hsl(" + round(hue(baseColor)) +", " + round(saturation(baseColor)) + "%, " + max(round(lightness(baseColor)) + AUDIO_BAR_BRIGHTNESS, 0) + "%)"
-                            )
-                        }
-                        rect(
-                            spacing * (i + 1) - (spacing - 10)/2,
-                            map(
-                                audioDataCache[i],
-                                0,
-                                1,
-                                (1 - AUDIO_BAR_BOTTOM)*height,
-                                (1 - AUDIO_BAR_TOP) * height
-                            ),
-                            spacing*.8,
-                            height
-                        );
-                    }
-                }
-                now = new Date().getTime();
-                timeAudio = timeAudio * (1 - DEBUG_AVG_FACTOR) + (now - startTime) * DEBUG_AVG_FACTOR;
-                
-                //Drawing Terrain
-                startTime = new Date().getTime();
-                timeTerrainColor *= (1 - DEBUG_AVG_FACTOR)
-                timeTerrainShape *= (1 - DEBUG_AVG_FACTOR)
-                for(var n = 0; n < terrain.length; n++) {
-                    
-                    //Select Color
-                    var startTimeB = new Date().getTime();
-                    var colorPoint = terrain[n].colorPoint;
-                    noStroke();
-                    var preTransColor = getColorRad(currentTime,calcSkyA(colorPoint[0],colorPoint[1]));
-                    colorMode(HSB)
-                    fill(terrain[n].colorFunction(preTransColor));
-                    now = new Date().getTime();
-                    timeTerrainColor += (now - startTimeB) * DEBUG_AVG_FACTOR;
-                    var startTimeB = now;
-                    
-                    //Debug colors
-                    if(DEBUG.includes("colors")) {
-                        stroke(color(360/terrain.length*n, 100, 100))
-                        strokeWeight(5)
-                        noFill()
-                    }
-                    
-                    //Draw Shape
-                    var points = terrain[n].points;
-                    beginShape();
-                    for(var x = 0; x < points.length; x++) {
-                        vertex(points[x][0],points[x][1]);
-                    }
-                    endShape(CLOSE);
-                    now = new Date().getTime();
-                    timeTerrainShape += (now - startTimeB) * DEBUG_AVG_FACTOR;
-                }
-                now = new Date().getTime();
-                timeTerrain = timeTerrain * (1 - DEBUG_AVG_FACTOR) + (now - startTime) * DEBUG_AVG_FACTOR;
-                
-                //Draw Weather
-                //Calculating Alpha (strength of storm, 0 to 1)
-                startTime = new Date().getTime();
-                colorMode(RGB,255,255,255,1);
-                var rainTick = nowEpoch/RAIN_DURATION/1000*RAIN_FREQ%1;
-                var rainingFor = nowEpoch%(RAIN_DURATION*1000/RAIN_FREQ);
-                var alpha;
-                if(rainTick < RAIN_FREQ) {
-                    //1/10 of rain period spend building
-                    alpha = min(rainingFor/(RAIN_DURATION*1000/10),1);
-                }else {
-                    alpha = max(1 - (rainingFor/1000 - RAIN_DURATION)/(RAIN_DURATION/10), 0);
-                }
-                if(RAIN_FREQ === 1) {
-                    alpha = 1;
-                }
-                
-                //Spawn some rain
-                for(var i = 0; i < width/100; i++) {
-                    if(random() < alpha * RAIN_AMT) {
-                        rain.push([random(width),0]);
-                    }
-                }
-                
-                //Draw lighting
-                noStroke();
-                fill(color(0,0,30,alpha*RAIN_DARKNESS));
-                rect(0,0,width,height);
-                
-                //Draw some rain
-                stroke(255,255,255,.5)
-                strokeWeight(1);
-                for(var i = 0; i < rain.length; i++) {
-                    drop = rain[i];
-                    line(drop[0],drop[1],drop[0],drop[1]-RAIN_SIZE)
-                    newdrop = [drop[0], drop[1] + RAIN_SPEED];
-                    if(newdrop[1]-RAIN_SIZE < height) {
-                        rain[i] = newdrop;
+                    var audioDataCache = audioData?audioData.slice(0, audioData.length - 1):null;
+                    if(TIME_MODE === 2 && !needRedraw && audioDataPrevious === audioDataCache && raindrops.length === 0) {
+                        return; //Special case shortcut:  If time is locked at the same spot, it isn't raining, and the audio visualizer hasn't changed, then there's no need to redraw
                     }else{
-                        rain.splice(i--,1)
+                        audioDataPrevious = audioDataCache;
+                        needRedraw = false;
                     }
-                }
-                now = new Date().getTime();
-                timeWeather = timeWeather * (1 - DEBUG_AVG_FACTOR) + (now - startTime) * DEBUG_AVG_FACTOR;
-                
-                //Draw Debug
-                if(DEBUG.length) {
-                    var message = "";
-                    var y = 10;
-                    if(DEBUG.includes("timing")) {
-                        message +=
-                            "---Timing---\n" + 
-                            "Background: " + round(100 * timeBackground) / 100 + "ms\n" +
-                            "Audio: " + round(100 * timeAudio) / 100 + "ms\n" +
-                            "Terrain: " + round(100 * timeTerrain) / 100 + "ms\n" +
-                            "   Color: " + round(100 * timeTerrainColor) / 100 + "ms\n" +
-                            "   Shape: " + round(100 * timeTerrainShape) / 100 + "ms\n" +
-                            "Weather: " + round(100 * timeWeather) / 100 + "ms\n\n";
-                        y += 8 * 11.5;
+
+                    var date = new Date();
+                    var nowEpoch = date.getTime();
+                    var currentTime; // 0 - 1 where 0 = midnight, .25 = sunrise, .5 = day, .75 = sunset, and 1 is back to midnight
+                    switch(TIME_MODE) {
+                        case 0:
+                            currentTime = (nowEpoch/100000*TIME_SCALE)%1;
+                            break;
+                        case 1:
+                            var sunrise = TIME_REAL_SUNRISE_H + TIME_REAL_SUNRISE_M;
+                            var sunset = TIME_REAL_SUNSET_H + TIME_REAL_SUNSET_M;
+                            var real = date.getHours() + date.getMinutes()/60;
+                            if(real < sunset && real > sunrise) {
+                                currentTime = map(real,sunrise,sunset,.25,.75);
+                            }else{
+                                currentTime = (real / (24 - sunset + sunrise) / 2 + .75) % 1
+                            }
+                            break;
+                        case 2:
+                            currentTime = TIME_LOCK_POS;
                     }
-                    fill(0);
+
+                    //Draw Background
+                    var startTime = new Date().getTime();
+                    for(var a = sunMaxA; a > 0; a-=SKY_RESOLUTION) {
+                        noStroke();
+                        fill(getColorRad(currentTime,a));
+                        ellipse(width/2,sunY,2*a*sunR1,2*a)
+                    }
+                    var now = new Date().getTime();
+                    timeBackground = timeBackground * (1 - DEBUG_AVG_FACTOR) + (now - startTime) * DEBUG_AVG_FACTOR;
+
+                    //Draw Audio Visualization
+                    startTime = new Date().getTime();
+                    if(audioDataCache) {
+                        if(!AUDIO_BAR_DYNAMIC) {
+                            fill(color(AUDIO_BAR_COLOR));
+                        }
+                        noStroke();
+                        var spacing = width / (audioDataCache.length + 1);
+                        for(var i = 0; i < audioDataCache.length; i++) {
+                            if(AUDIO_BAR_DYNAMIC) {
+                                var baseColor = getColorRad(currentTime, calcSkyA(spacing * (i - 1), height/2));
+                                fill(
+                                    "hsl(" + round(hue(baseColor)) +", " + round(saturation(baseColor)) + "%, " + max(round(lightness(baseColor)) + AUDIO_BAR_BRIGHTNESS, 0) + "%)"
+                                )
+                            }
+                            rect(
+                                spacing * (i + 1) - (spacing - 10)/2,
+                                map(
+                                    audioDataCache[i],
+                                    0,
+                                    1,
+                                    (1 - AUDIO_BAR_BOTTOM)*height,
+                                    (1 - AUDIO_BAR_TOP) * height
+                                ),
+                                spacing*.8,
+                                height
+                            );
+                        }
+                    }
+                    now = new Date().getTime();
+                    timeAudio = timeAudio * (1 - DEBUG_AVG_FACTOR) + (now - startTime) * DEBUG_AVG_FACTOR;
+
+                    //Drawing Terrain
+                    startTime = new Date().getTime();
+                    timeTerrainColor *= (1 - DEBUG_AVG_FACTOR)
+                    timeTerrainShape *= (1 - DEBUG_AVG_FACTOR)
+                    for(var n = 0; n < terrain.length; n++) {
+
+                        //Select Color
+                        var startTimeB = new Date().getTime();
+                        var colorPoint = terrain[n].colorPoint;
+                        noStroke();
+                        var preTransColor = getColorRad(currentTime,calcSkyA(colorPoint[0],colorPoint[1]));
+                        colorMode(HSB)
+                        fill(terrain[n].colorFunction(preTransColor));
+                        now = new Date().getTime();
+                        timeTerrainColor += (now - startTimeB) * DEBUG_AVG_FACTOR;
+                        var startTimeB = now;
+
+                        //Debug colors
+                        if(DEBUG.includes("colors")) {
+                            stroke(color(360/terrain.length*n, 100, 100))
+                            strokeWeight(5)
+                            noFill()
+                        }
+
+                        //Draw Shape
+                        var points = terrain[n].points;
+                        beginShape();
+                        for(var x = 0; x < points.length; x++) {
+                            vertex(points[x][0],points[x][1]);
+                        }
+                        endShape(CLOSE);
+                        now = new Date().getTime();
+                        timeTerrainShape += (now - startTimeB) * DEBUG_AVG_FACTOR;
+                    }
+                    now = new Date().getTime();
+                    timeTerrain = timeTerrain * (1 - DEBUG_AVG_FACTOR) + (now - startTime) * DEBUG_AVG_FACTOR;
+
+                    //Draw Weather
+                    //Calculating Alpha (strength of storm, 0 to 1)
+                    startTime = new Date().getTime();
+                    colorMode(RGB,255,255,255,1);
+                    var rainTick = nowEpoch/RAIN_DURATION/1000*RAIN_FREQ%1;
+                    var rainingFor = nowEpoch%(RAIN_DURATION*1000/RAIN_FREQ);
+                    var alpha;
+                    if(rainTick < RAIN_FREQ) {
+                        //1/10 of rain period spend building
+                        alpha = min(rainingFor/(RAIN_DURATION*1000/10),1);
+                    }else {
+                        alpha = max(1 - (rainingFor/1000 - RAIN_DURATION)/(RAIN_DURATION/10), 0);
+                    }
+                    if(RAIN_FREQ === 1) {
+                        alpha = 1;
+                    }
+
+                    //Spawn some rain
+                    for(var i = 0; i < width/100; i++) {
+                        if(random() < alpha * RAIN_AMT) {
+                            rain.push([random(width),0]);
+                        }
+                    }
+
+                    //Draw lighting
                     noStroke();
-                    rect(0,40,300,y+5);
-                    fill(255);
-                    text(message,5,53)
+                    fill(color(0,0,30,alpha*RAIN_DARKNESS));
+                    rect(0,0,width,height);
+
+                    //Draw some rain
+                    stroke(255,255,255,.5)
+                    strokeWeight(1);
+                    for(var i = 0; i < rain.length; i++) {
+                        drop = rain[i];
+                        line(drop[0],drop[1],drop[0],drop[1]-RAIN_SIZE)
+                        newdrop = [drop[0], drop[1] + RAIN_SPEED];
+                        if(newdrop[1]-RAIN_SIZE < height) {
+                            rain[i] = newdrop;
+                        }else{
+                            rain.splice(i--,1)
+                        }
+                    }
+                    now = new Date().getTime();
+                    timeWeather = timeWeather * (1 - DEBUG_AVG_FACTOR) + (now - startTime) * DEBUG_AVG_FACTOR;
+
+                    //Draw Debug
+                    if(DEBUG.length) {
+                        var message = "";
+                        var y = 10;
+                        if(DEBUG.includes("timing")) {
+                            message +=
+                                "---Timing---\n" + 
+                                "Background: " + round(100 * timeBackground) / 100 + "ms\n" +
+                                "Audio: " + round(100 * timeAudio) / 100 + "ms\n" +
+                                "Terrain: " + round(100 * timeTerrain) / 100 + "ms\n" +
+                                "   Color: " + round(100 * timeTerrainColor) / 100 + "ms\n" +
+                                "   Shape: " + round(100 * timeTerrainShape) / 100 + "ms\n" +
+                                "Weather: " + round(100 * timeWeather) / 100 + "ms\n\n";
+                            y += 8 * 11.5;
+                        }
+                        fill(0);
+                        noStroke();
+                        rect(0,40,300,y+5);
+                        fill(255);
+                        text(message,5,53)
+                    }
                 }
             }
             
@@ -567,7 +582,7 @@ Direct inqueries to tsa6games@gmail.com
 
                     if(props.timeLockPos) {
                         TIME_LOCK_POS = map(props.timeLockPos.value, 0, 100, 0, 0.5);
-                        timeLockChanged = true;
+                        needRedraw = true;
                     }
 
                     if(props.mountainResolution) {
@@ -584,32 +599,44 @@ Direct inqueries to tsa6games@gmail.com
                         SKY_RESOLUTION = 100/props.skyResolution.value;
                     }
 
+                    if(props.skyTweakTool) {
+                        SKY_TWEAK_TOOL = props.skyTweakTool.value;
+                        needRedraw = true;
+                    }
+
                     if(props.skyMapMod) {
                         SKY_MAP_MOD = props.skyMapMod.value;
+                        needRedraw = true;
                     }
 
                     if(props.topNight) {
                         topNight = color("rgb(" + props.topNight.value.split(" ").map(function(a){return a * 255}) + ")");
+                        needRedraw = true;
                     }
 
                     if(props.bottomNight) {
                         bottomNight = color("rgb(" + props.bottomNight.value.split(" ").map(function(a){return a * 255}) + ")");
+                        needRedraw = true;
                     }
 
                     if(props.topSun) {
                         topSun = color("rgb(" + props.topSun.value.split(" ").map(function(a){return a * 255}) + ")");
+                        needRedraw = true;
                     }
 
                     if(props.bottomSun) {
                         bottomSun = color("rgb(" + props.bottomSun.value.split(" ").map(function(a){return a * 255}) + ")");
+                        needRedraw = true;
                     }
 
                     if(props.topDay) {
                         topDay = color("rgb(" + props.topDay.value.split(" ").map(function(a){return a * 255}) + ")");
+                        needRedraw = true;
                     }
 
                     if(props.bottomDay) {
                         bottomDay = color("rgb(" + props.bottomDay.value.split(" ").map(function(a){return a * 255}) + ")");
+                        needRedraw = true;
                     }
 
                     //Recall setup, if necessary
@@ -620,6 +647,7 @@ Direct inqueries to tsa6games@gmail.com
                     onSetupProps = props;
                 }
             }
-        </script>
-    </body>
+    </script>
+</body>
+
 </html>

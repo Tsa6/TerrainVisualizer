@@ -298,6 +298,15 @@
                 "max":100,
                 "condition": "menu.value === 5 && timeMode.value === 2"
             },
+            "skyMapMod": {
+                "text": "Day/Night Duration",
+                "type": "slider",
+                "value": 50,
+                "order": 506,
+                "min":0,
+                "max":100,
+                "condition": "menu.value === 5"
+            },
 			"schemecolor" : 
 			{
 				"condition" : "menu.value === 6",

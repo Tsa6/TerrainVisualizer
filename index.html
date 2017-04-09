@@ -50,6 +50,7 @@ Direct inqueries to tsa6games@gmail.com
             var RAIN_AMT;
             var RAIN_DARKNESS;
             var SKY_RESOLUTION;
+            var SKY_MAP_MOD;
             var AUDIO_SMOOTH;
             var AUDIO_BAR_COUNT;
             var AUDIO_BAR_BRIGHTNESS;
@@ -115,9 +116,11 @@ Direct inqueries to tsa6games@gmail.com
                 RAIN_AMT=.1; //Chance per 100 pixels per frame of spawning
                 RAIN_DARKNESS=.6
                 SKY_RESOLUTION=4; //Lower numbers = Higher Resolution (1 - 100)
+                SKY_MAP_MOD = 50; //Number between 0 - 100, controls day/night dur.
+                AUDIO_VOLUME_SMOOTH=.99;//Larger numbers have a greater smooth (0 - 1)
                 AUDIO_SMOOTH=.4;//Larger numbers have a greater smooth (0 - 1)
                 AUDIO_BAR_COUNT = 33; //Between 2 and 128
-                AUDIO_BAR_BRIGHTNESS = 20; //Between 0 and 100
+                AUDIO_BAR_BRIGHTNESS = 20; //Between 0 and 100 
                 AUDIO_BAR_COLOR = "red";
                 AUDIO_BAR_TOP = .875;
                 AUDIO_BAR_BOTTOM = .4;
@@ -462,7 +465,7 @@ Direct inqueries to tsa6games@gmail.com
             }
             
             function getColorLin(time, ypercent) {
-                var time = 2 - abs(4*time - 2)
+                var time = 2 * (pow(-.5 * cos(2 * PI * time) + .5, pow(10, (SKY_MAP_MOD - 50)/50)))
                 colorMode(RGB,255)
                 var top;
                 var bottom;
@@ -579,6 +582,10 @@ Direct inqueries to tsa6games@gmail.com
 
                     if(props.skyResolution) {
                         SKY_RESOLUTION = 100/props.skyResolution.value;
+                    }
+
+                    if(props.skyMapMod) {
+                        SKY_MAP_MOD = props.skyMapMod.value;
                     }
 
                     if(props.topNight) {

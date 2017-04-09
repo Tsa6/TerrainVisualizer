@@ -86,7 +86,7 @@ Direct inqueries to tsa6games@gmail.com
             var timeTerrainShape = 0;
             var timeWeather = 0;
             
-            var DEBUG = [];
+            var DEBUG = ["timing"];
             var DEBUG_AVG_FACTOR = .001;
             //Entering strings into the DEBUG array to enable various debug modes
             //Debug modes:
@@ -244,11 +244,13 @@ Direct inqueries to tsa6games@gmail.com
                 
                 //Go through the mountains and remove points that are being obscured by other mountains
                 for(var i = 0; i < terrain.length - 1; i++) { //Go through mountains
+                    var currentMountain = terrain[i]
+                    
                     var invalidPoints = []; //Start a list of invalid points in this mountain
-                    for(var k = 0; k < terrain[i].points.length; k++) { //For each point in the mountain
+                    for(var k = 0; k < currentMountain.points.length; k++) { //For each point in the mountain
                         invalidPoints[k] = false;
                         for(var j = i + 1; j < terrain.length; j++) { //Go through mountains in front of this mountain
-                            var subjectPoint = terrain[i].points[k];
+                            var subjectPoint = currentMountain.points[k];
                             for(var l = 0; l < terrain[j].points.length - 1; l++) { //Find the points that might be covering it
                                 var testingPointA = terrain[j].points[l];
                                 var testingPointB = terrain[j].points[l + 1];
@@ -263,14 +265,20 @@ Direct inqueries to tsa6games@gmail.com
                     //Points that have invalid points before and after them should be removed.
                     for(var j = 1; j < invalidPoints.length - 1; j++) {
                         if(invalidPoints[j - 1] && invalidPoints[j] && invalidPoints[j + 1]) {
-                            terrain[i].points.splice(j, 1)
+                            currentMountain.points.splice(j, 1)
                             invalidPoints.splice(j--, 1)
                         }
                     }
                     
-                    //Make sure the points that complete the mountain are always directly beneath the first and last points,
-                    terrain[i].points[0][0] = terrain[i].points[1][0];
-                    terrain[i].points[terrain[i].points.length - 1][0] = terrain[i].points[terrain[i].points.length - 2][0]
+                    //Efficiently close the mountains
+                    currentMountain.points[0][0] = currentMountain.points[1][0];
+                    currentMountain.points[0][1] = heightAt(currentMountain.points[0][0], i + 1) + 10;
+                    var rightX = currentMountain.points[terrain[i].points.length - 2][0];
+                    var index = currentMountain.points.length - 1;
+                    while(rightX > currentMountain.points[0][0]) {
+                        currentMountain.points[index++] = [rightX, heightAt(rightX, i + 1) + 10];
+                        rightX -= 10;
+                    }
                 }
             }
             
@@ -450,6 +458,24 @@ Direct inqueries to tsa6games@gmail.com
                     fill(255);
                     text(message,5,53)
                 }
+            }
+            
+            function heightAt(x, z) {
+                var currentHeight = height;
+                for(; z < terrain.length; z++) { //Go through mountains in front of this mountain
+                    for(var l = 0; l < terrain[z].points.length - 1; l++) { //Find the points that might be covering it
+                        var b = terrain[z].points[l];
+                        var c = terrain[z].points[l + 1];
+                        if(b[0] <= x && c[0] >= x) {
+                            var testHeight = ((c[1] - b[1])/(c[0] - b[0])) * (x - b[0]) + b[1];
+                            if(testHeight < currentHeight) {
+                                currentHeight = testHeight;
+                                break;
+                            }
+                        }
+                    }
+                }
+                return currentHeight;
             }
             
             function calcA(x, y, h, k, r1, r2) {

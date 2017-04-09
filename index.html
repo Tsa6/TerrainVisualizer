@@ -74,6 +74,8 @@ Direct inqueries to tsa6games@gmail.com
             var sunMaxA;
             var audioData;
             var audioVolume;
+            var audioDataPrevious;
+            var timeLockChanged;
             
             //Debug Timers
             var timeBackground = 0;
@@ -147,6 +149,10 @@ Direct inqueries to tsa6games@gmail.com
                     
                     //Adjust volume
                     audioVolume = audioVolume * AUDIO_SMOOTH + max(data) * (1 - AUDIO_SMOOTH);
+                    if(audioVolume < 1e-8) {
+                        audioData = null;
+                        return; //If the volume is unreasonably quite, don't report it
+                    }
                     data = data.map(function(d){return audioVolume?d/audioVolume:d})
                     
                     //Reduce to appropriate number of bars
@@ -268,6 +274,14 @@ Direct inqueries to tsa6games@gmail.com
             
             function draw() {
                 
+                var audioDataCache = audioData?audioData.slice(0, audioData.length - 1):null;
+                if(TIME_MODE === 2 && !timeLockChanged && audioDataPrevious === audioDataCache && raindrops.length === 0) {
+                    return; //Special case shortcut:  If time is locked at the same spot, it isn't raining, and the audio visualizer hasn't changed, then there's no need to redraw
+                }else{
+                    audioDataPrevious = audioDataCache;
+                    timeLockChanged = false;
+                }
+                
                 var date = new Date();
                 var nowEpoch = date.getTime();
                 var currentTime; // 0 - 1 where 0 = midnight, .25 = sunrise, .5 = day, .75 = sunset, and 1 is back to midnight
@@ -301,13 +315,13 @@ Direct inqueries to tsa6games@gmail.com
                 
                 //Draw Audio Visualization
                 startTime = new Date().getTime();
-                if(audioData && audioVolume > 1e-8) {
+                if(audioDataCache) {
                     if(!AUDIO_BAR_DYNAMIC) {
                         fill(color(AUDIO_BAR_COLOR));
                     }
                     noStroke();
-                    var spacing = width / (audioData.length + 1);
-                    for(var i = 0; i < audioData.length; i++) {
+                    var spacing = width / (audioDataCache.length + 1);
+                    for(var i = 0; i < audioDataCache.length; i++) {
                         if(AUDIO_BAR_DYNAMIC) {
                             var baseColor = getColorRad(currentTime, calcSkyA(spacing * (i - 1), height/2));
                             fill(
@@ -317,7 +331,7 @@ Direct inqueries to tsa6games@gmail.com
                         rect(
                             spacing * (i + 1) - (spacing - 10)/2,
                             map(
-                                audioData[i],
+                                audioDataCache[i],
                                 0,
                                 1,
                                 (1 - AUDIO_BAR_BOTTOM)*height,
@@ -551,6 +565,7 @@ Direct inqueries to tsa6games@gmail.com
 
                     if(props.timeLockPos) {
                         TIME_LOCK_POS = map(props.timeLockPos.value, 0, 100, 0, 0.5);
+                        timeLockChanged = true;
                     }
 
                     if(props.mountainResolution) {

@@ -26,7 +26,8 @@ Direct inqueries to tsa6games@gmail.com
             //Register property listener
             //This needs to be at the top otherwise we miss the initial properties.
             window.wallpaperPropertyListener = {
-                applyUserProperties: applyProperties
+                applyUserProperties: applyProperties,
+                applyGeneralProperties: applyGeneralProperties
             }
             var isSetup = false;
             var onSetupProps = null;
@@ -644,6 +645,12 @@ Direct inqueries to tsa6games@gmail.com
                     }
                 }else{
                     onSetupProps = props;
+                }
+            }
+            
+            function applyGeneralProperties(props) {
+                if(props.fps) {
+                    frameRate(props.fps)
                 }
             }
         </script>

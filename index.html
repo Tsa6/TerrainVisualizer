@@ -68,7 +68,7 @@ Direct inqueries to tsa6games@gmail.com
             var bottomDay;
 
             var terrain;
-            var raindrops;
+            var rain;
             var sunY;
             var terrainTop;
             var terrainBottom;
@@ -286,7 +286,7 @@ Direct inqueries to tsa6games@gmail.com
             function draw() {
                 
                 var audioDataCache = audioData?audioData.slice(0, audioData.length - 1):null;
-                if(TIME_MODE === 2 && !timeLockChanged && audioDataPrevious === audioDataCache && raindrops.length === 0) {
+                if(TIME_MODE === 2 && !timeLockChanged && audioDataPrevious === audioDataCache && rain.length === 0) {
                     return; //Special case shortcut:  If time is locked at the same spot, it isn't raining, and the audio visualizer hasn't changed, then there's no need to redraw
                 }else{
                     audioDataPrevious = audioDataCache;
